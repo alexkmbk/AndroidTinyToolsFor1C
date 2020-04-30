@@ -1,0 +1,7 @@
+LIBRARY    
+
+EXPORTS
+GetClassObject
+DestroyObject
+GetClassNames
+SetPlatformCapabilities
