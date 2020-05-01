@@ -5,6 +5,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.widget.Toast;
+
+import static android.content.Context.VIBRATOR_SERVICE;
 
 @android.support.annotation.Keep
 public class BroadcastReceiverClass implements Runnable{
@@ -38,11 +41,16 @@ public class BroadcastReceiverClass implements Runnable{
     }
 
         public void run() {
-            System.loadLibrary("AndroidTinyTools");
+
+            try {
+                System.loadLibrary("AndroidTinyTools");
+            } catch (UnsatisfiedLinkError e) {//catch (UnsatisfiedLinkError e) {
+                Toast.makeText(mContext.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                return;
+            }
 
             if (mReceiver == null)
             {
-
                 mReceiver = new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {

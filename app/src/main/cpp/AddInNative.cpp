@@ -304,26 +304,6 @@ bool CAddInNative::CallAsProc(const long lMethodNum,
     return true;
 }
 
-/*uint32_t convToShortWchar(WCHAR_T** Dest, const wchar_t* Source, uint32_t len=0)
-{
-    if (!len)
-        len = static_cast<uint32_t>(::wcslen(Source) + 1);
-
-    if (!*Dest)
-        *Dest = new WCHAR_T[len];
-
-    WCHAR_T* tmpShort = *Dest;
-    wchar_t* tmpWChar = (wchar_t*)Source;
-    uint32_t res = 0;
-
-    for (; len; --len, ++res, ++tmpWChar, ++tmpShort)
-    {
-        *tmpShort = (WCHAR_T)*tmpWChar;
-    }
-
-    return res;
-}*/
-
 //---------------------------------------------------------------------------//
 bool CAddInNative::CallAsFunc(const long lMethodNum,
                               tVariant* pvarRetValue, tVariant* paParams, const long lSizeArray)
@@ -336,20 +316,6 @@ bool CAddInNative::CallAsFunc(const long lMethodNum,
     return true;
 }
 
-//---------------------------------------------------------------------------//
-// Платформа передает в компоненту текущее название локали.
-// Название локали зависит от системы и возможно от настроек платформы,
-// может принимать самые различные значения: "ru_RU", "rus", "ru" и т.д.
-// Название локали можно использовать для инициализации локали в стандартной библиотеке шаблонов (STL)
-// языка C++. От установленной локали в STL зависит:
-// - правила конвертации из строки в число (напр. символ разделения дробной части)
-// - мультибайтовая кодировка (UTF-8, CP1521 и т.д.) в которую будет преобразовываться строка из широких символов функцией wcstombs.
-// - мультибайтовая кодировка, которая будет принята за основу при преобразовании строки из мультибайтовых символов в широкие функцией mbstowcs.
-// - множество прочих национальных особенностей
-// На текущий момент (v1С = 8.3.6.1760), в функцию могут передаваться названия локалей которые не подходят для передачи
-// в функцию setlocale и она возвращает NULL, с этим надо бы разобраться. Если функция setlocale возвращает NULL,
-// то в неё передается пустая строка, это приводит к установке текущих языковых настроек операционной системы.
-//
 void CAddInNative::SetLocale(const WCHAR_T* loc)
 {
 #if !defined( __linux__ ) && !defined(__APPLE__) && !defined(__ANDROID__)
@@ -381,14 +347,8 @@ void CAddInNative::Vibrate(tVariant* paParams, const long lSizeArray) {
     if (helper)
     {
 
-        WCHAR_T* className = 0;
         long milliseconds = paParams[0].lVal;
-
         jclass ccloc = helper->FindClass((uint16_t*)u"com/alexkmbk/androidtinytools/VibrateClass");
-
-
-        delete[] className;
-        className = 0;
 
         if (ccloc)
         {
