@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.widget.Toast;
 
-import static android.content.Context.VIBRATOR_SERVICE;
-
 @android.support.annotation.Keep
 public class BroadcastReceiverClass implements Runnable{
     Activity mContext; // activity of 1C:Enterprise
@@ -44,7 +42,7 @@ public class BroadcastReceiverClass implements Runnable{
 
             try {
                 System.loadLibrary("AndroidTinyTools");
-            } catch (UnsatisfiedLinkError e) {//catch (UnsatisfiedLinkError e) {
+            } catch (UnsatisfiedLinkError e) {
                 Toast.makeText(mContext.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 return;
             }

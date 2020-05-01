@@ -4,9 +4,9 @@
 
 #if defined(__ANDROID__) //MOBILE_PLATFORM_WINRT
 
-#include "../../include/AddInDefBase.h"
-#include "../../include/mobile.h"
-#include "../include/IAndroidComponentHelper.h"
+#include "AddInDefBase.h"
+#include "mobile.h"
+#include "IAndroidComponentHelper.h"
 #include "jnienv.h"
 #include <jni.h>
 
@@ -325,9 +325,6 @@ void CAddInNative::SetLocale(const WCHAR_T* loc)
 #endif
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// LocaleBase
-//---------------------------------------------------------------------------//
 bool CAddInNative::setMemManager(void* mem)
 {
     m_iMemory = (IMemoryManager*)mem;
@@ -394,12 +391,10 @@ void CAddInNative::Beep(tVariant* paParams, const long lSizeArray) {
 
     if (helper)
     {
-
         jclass ccloc = helper->FindClass((uint16_t*)u"com/alexkmbk/androidtinytools/BeepClass");
 
         if (ccloc)
         {
-
             JNIEnv* jenv = getJniEnv();
             cc = static_cast<jclass>(jenv->NewGlobalRef(ccloc));
             jenv->DeleteLocalRef(ccloc);

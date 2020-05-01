@@ -5,8 +5,7 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
-include_directories(E:/DEV/Android/Test1CAddIn_2/app/src/include)
-include_directories(E:/DEV/Android/Test1CAddIn_2/app/src/main/cpp)
+include_directories(${PROJECT_SOURCE_DIR}../../../include)
 
 add_compile_options(-O2)
 
@@ -38,8 +37,6 @@ find_library( # Sets the name of the path variable.
               # Specifies the name of the NDK library that
               # you want CMake to locate.
              log )
-
-target_link_libraries(AndroidTinyTools -LE:/DEV/Android/AddIn1C/app/src/main/cpp/lib/android/)
 
 # Specifies libraries CMake should link to your target library. You
 # can link multiple libraries, such as libraries you define in this
