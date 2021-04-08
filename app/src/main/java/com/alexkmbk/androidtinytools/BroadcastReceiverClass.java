@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.widget.Toast;
 
 @android.support.annotation.Keep
@@ -41,7 +42,7 @@ public class BroadcastReceiverClass implements Runnable{
         public void run() {
 
             try {
-                System.loadLibrary("AndroidTinyTools");
+                System.loadLibrary("AndroidTinyTools_" + Constants.version);
             } catch (UnsatisfiedLinkError e) {
                 Toast.makeText(mContext.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 return;

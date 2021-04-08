@@ -1,23 +1,26 @@
-﻿#if !defined( __linux__ ) && !defined(__APPLE__) && !defined(__ANDROID__)
-#include "stdafx.h"
-#endif
-
-#if defined(__ANDROID__) //MOBILE_PLATFORM_WINRT
-
-#include "AddInDefBase.h"
-#include "mobile.h"
-#include "IAndroidComponentHelper.h"
-#include "jnienv.h"
-#include <jni.h>
-
-#endif
-
-#include <locale.h>
+﻿#include <locale.h>
 #include <wchar.h>
 #include <exception>
 #include "AddInNative.h"
+#include "StrConv.h"
+#include <map>
+#include <vector>
 
 static AppCapabilities g_capabilities = eAppCapabilitiesInvalid;
+
+static std::map<std::u16string, long> mMethods;
+static std::vector<std::u16string> vMethods;
+
+inline void fillMap(std::map<std::u16string, long>& map, const std::vector<std::u16string> & vector) {
+    long index = 0;
+    for (auto &item : vector)
+    {
+        auto lowCasedItem = item;
+        tolowerStr(lowCasedItem);
+        map.insert({ lowCasedItem, index });
+        index++;
+    }
+}
 
 //---------------------------------------------------------------------------//
 long GetClassObject(const WCHAR_T* wsName, IComponentBase** pInterface)
@@ -60,6 +63,10 @@ CAddInNative::CAddInNative()
     m_iMemory = NULL;
     m_iConnect = NULL;
 
+    if (mMethods.size() == 0) {
+        vMethods = { u"Vibrate", u"Beep", u"Toast", u"StartBroadcastReceiver", u"GetBluetoothDevicesList", u"StartBluetoothScannerHandler", u"StopBluetoothScannerHandler", u"IsBluetoothScannerHandlerConnected"};
+        fillMap(mMethods, vMethods);
+    }
 }
 //---------------------------------------------------------------------------//
 CAddInNative::~CAddInNative()
@@ -150,6 +157,18 @@ long CAddInNative::GetNMethods()
 //---------------------------------------------------------------------------//
 long CAddInNative::FindMethod(const WCHAR_T* wsMethodName)
 {
+    std::basic_string<char16_t> usMethodName = (char16_t*)(wsMethodName);
+    tolowerStr(usMethodName);
+
+    auto it = mMethods.find(usMethodName);
+    if (it != mMethods.end())
+        return it->second;
+
+    return -1;
+}
+
+/*long CAddInNative::FindMethod(const WCHAR_T* wsMethodName)
+{
 
     long plMethodNum = -1;
 
@@ -165,8 +184,15 @@ long CAddInNative::FindMethod(const WCHAR_T* wsMethodName)
     else if (memcmp(wsMethodName, u"StartBroadcastReceiver", (sizeof(u"StartBroadcastReceiver")) - sizeof(char16_t)) == 0) {
         plMethodNum = eMethStartBroadcastReceiver;
     }
+    else if (memcmp(wsMethodName, u"GetBluetoothDevicesList", (sizeof(u"GetBluetoothDevicesList")) - sizeof(char16_t)) == 0) {
+        plMethodNum = eMethGetBluetoothDevicesList;
+    }
+    else if (memcmp(wsMethodName, u"StartBluetoothScannerListener", (sizeof(u"StartBluetoothScannerListener")) - sizeof(char16_t)) == 0) {
+        plMethodNum = eMethStartBluetoothScannerListener;
+    }
     return plMethodNum;
-}
+}*/
+
 //---------------------------------------------------------------------------//
 const WCHAR_T* CAddInNative::GetMethodName(const long lMethodNum, const long lMethodAlias)
 {
@@ -197,9 +223,25 @@ const WCHAR_T* CAddInNative::GetMethodName(const long lMethodNum, const long lMe
                     usCurrentName = u"StartBroadcastReceiver";
                     break;
                 }
+                case eMethGetBluetoothDevicesList: {
+                    usCurrentName = u"GetBluetoothDevicesList";
+                    break;
+                }
+                case eMethStartBluetoothScannerHandler: {
+                    usCurrentName = u"StartBluetoothScannerHandler";
+                    break;
+                }
+                case eMethStopBluetoothScannerHandler: {
+                    usCurrentName = u"StopBluetoothScannerHandler";
+                    break;
+                }
+                case eMethIsBluetoothScannerHandlerConnected: {
+                    usCurrentName = u"IsBluetoothScannerConnected";
+                    break;
+                }
             }
         }
-      }
+    }
 
     len = sizeof(usCurrentName);
 
@@ -226,6 +268,8 @@ long CAddInNative::GetNParams(const long lMethodNum)
             return 1;
         case eMethStartBroadcastReceiver:
             return 2;
+        case eMethStartBluetoothScannerHandler:
+            return 1;
         default:
             return 0;
     }
@@ -266,6 +310,14 @@ bool CAddInNative::HasRetVal(const long lMethodNum)
 {
     switch (lMethodNum)
     {
+        case eMethGetBluetoothDevicesList:
+        {
+             return true;
+        }
+        case eMethIsBluetoothScannerHandlerConnected:
+        {
+            return true;
+        }
         default:
             return false;
     }
@@ -298,6 +350,16 @@ bool CAddInNative::CallAsProc(const long lMethodNum,
             StartBroadcastReceiver(paParams, lSizeArray);
             return true;
         }
+        case eMethStopBluetoothScannerHandler:
+        {
+            bluetoothBarcodeScannerHandler.Stop();
+            return true;
+        }
+        case eMethStartBluetoothScannerHandler:
+        {
+            StartBluetoothScannerHandler(paParams, lSizeArray);
+            return true;
+        }
         default:
             return false;
     }
@@ -310,11 +372,36 @@ bool CAddInNative::CallAsFunc(const long lMethodNum,
 {
     switch (lMethodNum)
     {
+        case eMethGetBluetoothDevicesList:
+        {
+            GetBluetoothDevicesList(pvarRetValue, paParams, lSizeArray);
+            return true;
+        }
+        case eMethIsBluetoothScannerHandlerConnected:
+        {
+            bluetoothBarcodeScannerHandler.IsConnected(pvarRetValue);
+            return true;
+        }
         default:
             return false;
     }
     return true;
 }
+
+int strlen16(char16_t* strarg)
+{
+    int count = 0;
+    if(!strarg)
+        return -1; //strarg is NULL pointer
+    char16_t* str = strarg;
+    while(*str)
+    {
+        count++;
+        str++;
+    }
+    return count;
+}
+
 
 void CAddInNative::SetLocale(const WCHAR_T* loc)
 {
@@ -471,24 +558,60 @@ void CAddInNative::StopBroadcastReceiver() {
     broadcastReceiver.Stop();
 }
 
-long jstring2v8string(JNIEnv *jenv, IMemoryManager *m_iMemory, jstring jstrIn, WCHAR_T **output){
 
-    if (jstrIn == NULL)
-        return  0;
+void CAddInNative::GetBluetoothDevicesList(tVariant* pvarRetValue, tVariant* paParams, const long lSizeArray) {
 
-    jsize lengthInChars = jenv->GetStringLength(jstrIn);
-    jsize size = (lengthInChars + 1)* sizeof(uint16_t);
+    IAndroidComponentHelper*    helper;
+    jclass                      cc;
+    jobject                     obj;
+    IAddInDefBaseEx*            cnn;
 
-    if (!m_iMemory || !m_iMemory->AllocMemory(reinterpret_cast<void **>(output), size)) {
-        return 0;
-    };
+    cnn = m_iConnect;
+    helper = (IAndroidComponentHelper*)cnn->GetInterface(eIAndroidComponentHelper);
 
-    const jchar* jStringChars = jenv->GetStringChars(jstrIn, 0);
+    if (helper)
+    {
 
-    memcpy((*output), jStringChars, size);
-    (*output)[lengthInChars] = 0;
-    jenv->ReleaseStringChars(jstrIn, jStringChars);
-    return size;
+        jclass ccloc = helper->FindClass((uint16_t*)u"com/alexkmbk/androidtinytools/BluetoothClass");
+
+        if (ccloc)
+        {
+
+            JNIEnv* jenv = getJniEnv();
+            cc = static_cast<jclass>(jenv->NewGlobalRef(ccloc));
+            jenv->DeleteLocalRef(ccloc);
+            jobject activity = helper->GetActivity();
+            jmethodID ctorID = jenv->GetMethodID(cc, "<init>", "(Landroid/app/Activity;)V");
+
+            jobject objloc = jenv->NewObject(cc, ctorID, activity);
+            if (objloc)
+            {
+                obj = jenv->NewGlobalRef(objloc);
+                jenv->DeleteLocalRef(objloc);
+
+            } else
+            {
+                TV_VT(pvarRetValue) = VTYPE_PWSTR;
+                pvarRetValue->wstrLen = 0;
+                return;
+            }
+
+            jenv->DeleteLocalRef(activity);
+
+            jstring res = (jstring)jenv->CallObjectMethod(obj, jenv->GetMethodID(cc, "getBluetoothDevicesList", "()Ljava/lang/String;"));
+
+            TV_VT(pvarRetValue) = VTYPE_PWSTR;
+
+            pvarRetValue->wstrLen = jstring2v8string(jenv, m_iMemory, res, &(pvarRetValue->pwstrVal)) / sizeof(uint16_t) - 1;
+            return;
+        }
+    }
+}
+
+void CAddInNative::StartBluetoothScannerHandler(tVariant *paParams, const long lSizeArray){
+
+    bluetoothBarcodeScannerHandler.Start(m_iConnect, m_iMemory, paParams);
+
 }
 
 static const char16_t g_EventSource[] = u"AndroidTinyTools";
@@ -510,6 +633,24 @@ extern "C" JNIEXPORT void JNICALL Java_com_alexkmbk_androidtinytools_BroadcastRe
             broadcastReceiver->m_iConnect->ExternalEvent((uint16_t *) g_EventSource,
                                                            wcEventName,
                                                            wcExtraParam);
+        }
+    }
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_alexkmbk_androidtinytools_BluetoothBarcodeScannerHandlerClass_OnBarcode(JNIEnv* jenv, jclass jClass, jlong pObject, jstring sBarcode)
+{
+
+    BluetoothBarcodeScannerHandler *bluetoothBarcodeScannerHandler = (BluetoothBarcodeScannerHandler *) pObject;
+
+    if (bluetoothBarcodeScannerHandler) {
+
+        WCHAR_T *wcBarcode = nullptr;
+        jstring2v8string(jenv, bluetoothBarcodeScannerHandler->m_iMemory, sBarcode, &wcBarcode);
+
+        if (bluetoothBarcodeScannerHandler->m_iConnect != NULL) {
+            bluetoothBarcodeScannerHandler->m_iConnect->ExternalEvent((uint16_t *) g_EventSource,
+                                                         wcBarcode,
+                                                         (uint16_t *) g_EventSource);
         }
     }
 }

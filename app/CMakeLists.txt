@@ -10,7 +10,6 @@ include_directories(${PROJECT_SOURCE_DIR}../../../include)
 add_compile_options(-O2)
 
 
-
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.
@@ -23,7 +22,18 @@ add_library( # Sets the name of the library.
              SHARED
 
              # Provides a relative path to your source file(s).
-             src/main/cpp/jnienv.cpp src/main/cpp/jnienv.cpp src/main/cpp/BroadcastReceiver.cpp src/main/cpp/AddInNative.cpp )
+             src/main/cpp/jnienv.cpp src/main/cpp/StrConv.cpp src/main/cpp/BroadcastReceiver.cpp src/main/cpp/BluetoothBarcodeScannerHandler.cpp src/main/cpp/AddInNative.cpp )
+
+set_target_properties(AndroidTinyTools PROPERTIES LINK_FLAGS_RELEASE -s)
+set_target_properties(AndroidTinyTools PROPERTIES LINK_FLAGS_DEBUG -s)
+
+if(${ANDROID_ABI} STREQUAL "armeabi-v7a")
+    set_target_properties(AndroidTinyTools PROPERTIES SUFFIX "_ARM.so")
+else()
+    set_target_properties(AndroidTinyTools PROPERTIES SUFFIX "_i386.so")
+endif()
+
+set_target_properties(AndroidTinyTools PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}../../Package)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -48,3 +58,5 @@ target_link_libraries( # Specifies the target library.
                        # Links the target library to the log library
                        # included in the NDK.
                        ${log-lib} )
+
+

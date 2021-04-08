@@ -2,6 +2,10 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 27
+    /*compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }*/
     defaultConfig {
         applicationId "com.alexkmbk.androidtinytools"
         minSdkVersion 21
@@ -32,6 +36,11 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            applicationVariants.all { variant ->
+                variant.outputs.all { output ->
+                    output.outputFileName =  new File("./../../../../../Package/", 'AndroidTinyTools.apk')
+                }
+            }
         }
     }
     externalNativeBuild {
@@ -41,6 +50,8 @@ android {
     }
 
     packagingOptions {
+        exclude 'lib/armeabi-v7a/libAndroidTinyTools_ARM.so'
+        exclude 'lib/x86/libAndroidTinyTools_i386.so'
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
@@ -55,7 +66,7 @@ android {
 
 dependencies {
     //implementation 'com.android.support:appcompat-v7:28.0.0'
-    testImplementation 'junit:junit:4.12'
+    //testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 

@@ -15,7 +15,7 @@ void trace(const char* format, ...)
 
 JNIEnv* getJniEnv()
 {
-    trace("getJniEnv()"); 
+    trace("getJniEnv()");
 
     JNIEnv* env = NULL;
 
@@ -54,12 +54,12 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* aJavaVM, void* aReserved)
 
 extern "C" JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* aJavaVM, void* aReserved)
 {
-	sJavaVM = NULL;
+    sJavaVM = NULL;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_alexkmbk_stepCounterLib_StepCounterClass_NativeTrace(JNIEnv* jenv, jclass aClass, jstring aStr)
 {
-    const char* jchars = jenv->GetStringUTFChars(aStr, NULL); 
+    const char* jchars = jenv->GetStringUTFChars(aStr, NULL);
     trace(jchars);
-    jenv->ReleaseStringUTFChars(aStr, jchars); 
+    jenv->ReleaseStringUTFChars(aStr, jchars);
 }

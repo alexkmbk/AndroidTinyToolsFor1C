@@ -6,6 +6,18 @@
 #include "AddInDefBase.h"
 #include "IMemoryManager.h"
 #include "BroadcastReceiver.h"
+#include "BluetoothBarcodeScannerHandler.h"
+
+#if defined(__ANDROID__) //MOBILE_PLATFORM_WINRT
+
+
+#include "mobile.h"
+#include "IAndroidComponentHelper.h"
+#include "jnienv.h"
+#include "BluetoothBarcodeScannerHandler.h"
+#include <jni.h>
+
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -24,6 +36,10 @@ public:
         eMethBeep = 1,
         eMethToast = 2,
         eMethStartBroadcastReceiver = 3,
+        eMethGetBluetoothDevicesList = 4,
+        eMethStartBluetoothScannerHandler = 5,
+        eMethStopBluetoothScannerHandler = 6,
+        eMethIsBluetoothScannerHandlerConnected = 7,
         eMethLast      // Always last
     };
 
@@ -67,9 +83,12 @@ private:
     void Beep(tVariant* paParams, const long lSizeArray);
     void Toast(tVariant* paParams, const long lSizeArray);
     void StartBroadcastReceiver(tVariant *paParams, const long lSizeArray);
+    void StartBluetoothScannerHandler(tVariant *paParams, const long lSizeArray);
+    void GetBluetoothDevicesList( tVariant* pvarRetValue, tVariant *paParams, const long lSizeArray);
     void StopBroadcastReceiver();
 
     BroadcastReceiver broadcastReceiver;
+    BluetoothBarcodeScannerHandler bluetoothBarcodeScannerHandler;
 };
 
 #endif //__ADDINNATIVE_H__

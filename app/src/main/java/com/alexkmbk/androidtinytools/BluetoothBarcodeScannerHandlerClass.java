@@ -1,0 +1,153 @@
+// Partly, some code was used from this project - // https://infostart.ru/public/926522/
+//
+package com.alexkmbk.androidtinytools;
+
+import android.app.Activity;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.widget.Toast;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+
+@android.support.annotation.Keep
+public class BluetoothBarcodeScannerHandlerClass implements Runnable{
+    Activity mContext; // activity of 1C:Enterprise
+    private long mV8Object; // 1C application context
+
+    // in C/C++ code the function will have name Java_com_alexkmbk_androidtinytools_BluetoothBarcodeScannerHandlerClass_OnBarcode
+    static native void OnBarcode(long pObject, String sBarcode);
+
+    public static String btAdress;
+    private android.bluetooth.BluetoothAdapter btAdapter = null;
+    private static final android.bluetooth.BluetoothAdapter BluetoothAdapter = null;
+    private BluetoothSocket btSocket = null;
+    private BluetoothDevice device = null;
+
+    // формируем UID данного приложения для идентификации
+    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
+    // переменные для потокового чтения сообщений от сканера
+    InputStream inStream = null;
+
+    public BluetoothBarcodeScannerHandlerClass(Activity mContext, String btAdress, long v8Object) {
+        this.mContext = mContext;
+        this.mV8Object = v8Object;
+        this.btAdress = btAdress;
+    }
+
+    public void StartBluetoothBarcodeScannerHandler(){
+        mContext.runOnUiThread(this);
+    }
+
+    public void StopBluetoothBarcodeScannerHandler()
+    {
+        cancel();
+    }
+
+    public boolean IsConnected()
+    {
+        return (btSocket != null && btSocket.isConnected());
+    }
+
+    public void run() {
+
+        try {
+            System.loadLibrary("AndroidTinyTools_" + Constants.version);
+        } catch (UnsatisfiedLinkError e) {
+            Toast.makeText(mContext.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // получаем объект устройства
+        if (btAdapter == null)
+            btAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if(btAdapter==null)
+        {
+            // отсутствует поддержка работы с блютуз
+            Toast.makeText(mContext.getApplicationContext(), "Отсутствует поддержка работы с bluetooth", Toast.LENGTH_LONG).show();
+        }
+
+        if (!btAdapter.isEnabled()) {
+            // Bluetooth выключен. Предложим пользователю включить его.
+            Toast.makeText(mContext.getApplicationContext(), "Bluetooth выключен", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // подключаемся к сканеру путем указания MAC адреса
+
+        if (device == null)
+            device = btAdapter.getRemoteDevice(btAdress);
+
+        // создаем сокет для чтения из виртуального порта
+        // для создания требуется UID текущего приложеня (мы его создали при объявлении переменных)
+
+        if (btSocket != null && btSocket.isConnected())
+            return;
+
+        try {
+            btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
+        } catch (IOException e) {
+            Toast.makeText(mContext.getApplicationContext(), "Ошибка создания подключения", Toast.LENGTH_SHORT).show();
+        }
+
+        // Discovery is resource intensive.  Make sure it isn't going on
+        // when you attempt to connect and pass your message.
+        btAdapter.cancelDiscovery();
+
+        // соединение установлено
+            try {
+                btSocket.connect();
+                Toast.makeText(mContext.getApplicationContext(), "...Соединение установлено и готово к передачи данных...", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                try {
+                    btSocket.close();
+                } catch (IOException e2) {
+                    Toast.makeText(mContext.getApplicationContext(), "Ошибка соединения", Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
+
+        // Получить входящий поток данных
+        try {
+            inStream = btSocket.getInputStream();
+        } catch (IOException e) {
+            Toast.makeText(mContext.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        Thread thread = new Thread(new Runnable() {
+            public void run() {
+                byte[] buffer = new byte[1024];  // buffer store for the stream
+                int bytes; // bytes returned from read()
+                // Прослушиваем InputStream пока не произойдет исключение
+                while (true) {
+                    try {
+                        // Read from the InputStream
+                        // посылаем прочитанные байты главной деятельности
+                        bytes = inStream.read(buffer);        // Получаем кол-во байт и само собщение в байтовый массив "buffer"
+                        // преобразуем их в строку
+                        String strIncom = new String(buffer, 0, bytes, StandardCharsets.US_ASCII);
+                        strIncom = strIncom.replace(Character.toString((char) 29), "{gs}");
+                        strIncom = strIncom.replace(Character.toString((char) 21), "{gs}");
+                        OnBarcode(mV8Object, strIncom);
+                    } catch (IOException e) {
+                        break;
+                    }
+                }
+            }
+        });
+        thread.start();
+    }
+
+    public void cancel() {
+        if (inStream == null)
+            return;
+        try {
+            inStream.close();
+        }
+        catch (IOException e) { }
+    }
+}
