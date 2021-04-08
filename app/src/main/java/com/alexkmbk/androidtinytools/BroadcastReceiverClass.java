@@ -5,12 +5,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Resources;
 import android.widget.Toast;
 
 @android.support.annotation.Keep
 public class BroadcastReceiverClass implements Runnable{
-    Activity mContext; // activity of 1C:Enterprise
+    private Activity mContext; // activity of 1C:Enterprise
     private BroadcastReceiver mReceiver;
     private long mV8Object; // 1C application context
     private String mExtraParamName;

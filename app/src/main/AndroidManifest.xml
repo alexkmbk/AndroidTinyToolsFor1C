@@ -9,15 +9,7 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="library" >
-        <activity
-            android:name="com.alexkmbk.androidtinytools.LibActivity" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
+        android:label="library" ></application>
 
     android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
