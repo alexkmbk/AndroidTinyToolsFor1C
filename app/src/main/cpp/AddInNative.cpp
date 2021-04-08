@@ -615,6 +615,7 @@ void CAddInNative::StartBluetoothScannerHandler(tVariant *paParams, const long l
 }
 
 static const char16_t g_EventSource[] = u"AndroidTinyTools";
+static const char16_t g_OnBarcodeEventName[] = u"Barcode";
 
 extern "C" JNIEXPORT void JNICALL Java_com_alexkmbk_androidtinytools_BroadcastReceiverClass_BroadcastMessage(JNIEnv* jenv, jclass jClass, jlong pObject, jstring jsEventName, jstring jsExtraParam)
 {
@@ -649,8 +650,8 @@ extern "C" JNIEXPORT void JNICALL Java_com_alexkmbk_androidtinytools_BluetoothBa
 
         if (bluetoothBarcodeScannerHandler->m_iConnect != NULL) {
             bluetoothBarcodeScannerHandler->m_iConnect->ExternalEvent((uint16_t *) g_EventSource,
-                                                         wcBarcode,
-                                                         (uint16_t *) g_EventSource);
+                                                                      (uint16_t *) g_OnBarcodeEventName,
+                                                                      wcBarcode);
         }
     }
 }

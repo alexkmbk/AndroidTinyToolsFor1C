@@ -148,7 +148,6 @@ public class BluetoothBarcodeScannerHandlerClass {
         return (btSocket != null && btSocket.isConnected() && inputThread != null && inputThread.isAlive());
     }
 
-
     public void cancel() {
 
         if (inputThread != null)
