@@ -24,6 +24,7 @@ public class BluetoothBarcodeScannerHandlerClass implements Runnable{
     private static final android.bluetooth.BluetoothAdapter BluetoothAdapter = null;
     private BluetoothSocket btSocket = null;
     private BluetoothDevice device = null;
+    private InputThread inputThread = null;
 
     // формируем UID данного приложения для идентификации
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -78,19 +79,35 @@ public class BluetoothBarcodeScannerHandlerClass implements Runnable{
 
         // подключаемся к сканеру путем указания MAC адреса
 
+        device = btAdapter.getRemoteDevice(btAdress);
+
         if (device == null)
-            device = btAdapter.getRemoteDevice(btAdress);
+        {
+            Toast.makeText(mContext.getApplicationContext(), "Не удалось получить устройство по MAC адресу", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         // создаем сокет для чтения из виртуального порта
         // для создания требуется UID текущего приложеня (мы его создали при объявлении переменных)
 
-        if (btSocket != null && btSocket.isConnected())
-            return;
+        if (btSocket != null && btSocket.isConnected()) {
+            try {
+                btSocket.close();
+            } catch (IOException e) {
+                btSocket = null;
+            }
+        }
 
         try {
             btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
         } catch (IOException e) {
             Toast.makeText(mContext.getApplicationContext(), "Ошибка создания подключения", Toast.LENGTH_SHORT).show();
+        }
+
+        if (btSocket == null)
+        {
+            Toast.makeText(mContext.getApplicationContext(), "Ошибка создания подключения", Toast.LENGTH_SHORT).show();
+            return;
         }
 
         // Discovery is resource intensive.  Make sure it isn't going on
@@ -118,36 +135,55 @@ public class BluetoothBarcodeScannerHandlerClass implements Runnable{
             return;
         }
 
-        Thread thread = new Thread(new Runnable() {
-            public void run() {
-                byte[] buffer = new byte[1024];  // buffer store for the stream
-                int bytes; // bytes returned from read()
-                // Прослушиваем InputStream пока не произойдет исключение
-                while (true) {
-                    try {
-                        // Read from the InputStream
-                        // посылаем прочитанные байты главной деятельности
-                        bytes = inStream.read(buffer);        // Получаем кол-во байт и само собщение в байтовый массив "buffer"
-                        // преобразуем их в строку
-                        String strIncom = new String(buffer, 0, bytes, StandardCharsets.US_ASCII);
-                        strIncom = strIncom.replace(Character.toString((char) 29), "{gs}");
-                        strIncom = strIncom.replace(Character.toString((char) 21), "{gs}");
-                        OnBarcode(mV8Object, strIncom);
-                    } catch (IOException e) {
-                        break;
-                    }
-                }
-            }
-        });
-        thread.start();
+        if (inputThread != null)
+        {
+            inputThread.interrupt();
+            inputThread = null;
+        }
+        inputThread = new InputThread();
+        inputThread.start();
     }
 
     public void cancel() {
-        if (inStream == null)
-            return;
-        try {
-            inStream.close();
+
+        if (inputThread != null)
+        {
+            inputThread.interrupt();
+            inputThread = null;
         }
-        catch (IOException e) { }
+
+        if (inStream != null) {
+            try {
+                inStream.close();
+            } catch (IOException e) {
+            }
+        }
+        if (btSocket != null)
+            try {
+            btSocket.close();
+            btSocket = null;
+        }
+            catch (IOException e) { }
+    }
+
+    private class InputThread extends Thread {
+
+        public void run() {
+            byte[] buffer = new byte[1024];  // buffer store for the stream
+            int bytes; // bytes returned from read()
+            // Прослушиваем InputStream пока не произойдет исключение
+            while (true) {
+                try {
+                    // Read from the InputStream
+                    bytes = inStream.read(buffer);        // Получаем кол-во байт и само собщение в байтовый массив "buffer"
+                    // преобразуем их в строку
+                    String strIncom = new String(buffer, 0, bytes, StandardCharsets.US_ASCII);
+                    OnBarcode(mV8Object, strIncom);
+                } catch (IOException e) {
+                    cancel();
+                    break;
+                }
+            }
+        }
     }
 }
