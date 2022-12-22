@@ -29,6 +29,8 @@ set_target_properties(AndroidTinyTools PROPERTIES LINK_FLAGS_DEBUG -s)
 
 if(${ANDROID_ABI} STREQUAL "armeabi-v7a")
     set_target_properties(AndroidTinyTools PROPERTIES SUFFIX "_ARM.so")
+elseif(${ANDROID_ABI} STREQUAL "arm64-v8a")
+    set_target_properties(AndroidTinyTools PROPERTIES SUFFIX "_ARM64.so")
 else()
     set_target_properties(AndroidTinyTools PROPERTIES SUFFIX "_i386.so")
 endif()

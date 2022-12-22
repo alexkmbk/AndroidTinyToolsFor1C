@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 
+
 static AppCapabilities g_capabilities = eAppCapabilitiesInvalid;
 
 static std::map<std::u16string, long> mMethods;
@@ -603,6 +604,12 @@ void CAddInNative::GetBluetoothDevicesList(tVariant* pvarRetValue, tVariant* paP
             TV_VT(pvarRetValue) = VTYPE_PWSTR;
 
             pvarRetValue->wstrLen = jstring2v8string(jenv, m_iMemory, res, &(pvarRetValue->pwstrVal)) / sizeof(uint16_t) - 1;
+
+            /*TV_VT(pvarRetValue) = VTYPE_TM;
+            time_t now = time(0);
+            tm *ltm = localtime(&now);
+            char* buf;
+            strftime(buf, 20, "%d-%b-%Y %H:%M", ltm);*/
             return;
         }
     }
