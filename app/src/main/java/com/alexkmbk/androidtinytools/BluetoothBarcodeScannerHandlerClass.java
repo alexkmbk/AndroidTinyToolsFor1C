@@ -2,15 +2,22 @@
 //
 package com.alexkmbk.androidtinytools;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.pm.PackageManager;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-@android.support.annotation.Keep
+
 public class BluetoothBarcodeScannerHandlerClass {
     private Activity mContext; // activity of 1C:Enterprise
     private long mV8Object; // 1C application context
@@ -28,14 +35,21 @@ public class BluetoothBarcodeScannerHandlerClass {
     // переменные для потокового чтения сообщений от сканера
     private InputStream inStream = null;
 
+
     public BluetoothBarcodeScannerHandlerClass(Activity mContext, String btAdress, long v8Object) {
         this.mContext = mContext;
         this.mV8Object = v8Object;
         this.btAdress = btAdress;
     }
 
-    public void StartBluetoothBarcodeScannerHandler(){
 
+
+    @SuppressLint("MissingPermission")
+    public void StartBluetoothBarcodeScannerHandler() {
+
+        if (!Utils.checkBluetoothPermissions(mContext)) {
+            return;
+        }
         try {
             System.loadLibrary("AndroidTinyTools_" + Constants.version);
         } catch (UnsatisfiedLinkError e) {
@@ -48,14 +62,13 @@ public class BluetoothBarcodeScannerHandlerClass {
         if (btAdapter == null)
             try {
                 btAdapter = BluetoothAdapter.getDefaultAdapter();
-            } catch (Exception e){
+            } catch (Exception e) {
                 ToastClass toast = new ToastClass(mContext, "Не удалось получить доступ к bluetooth адаптеру.");
                 toast.toast();
                 return;
             }
 
-        if(btAdapter==null)
-        {
+        if (btAdapter == null) {
             // отсутствует поддержка работы с блютуз
             ToastClass toast = new ToastClass(mContext, "Отсутствует поддержка работы с bluetooth");
             toast.toast();
@@ -70,10 +83,15 @@ public class BluetoothBarcodeScannerHandlerClass {
 
         // подключаемся к сканеру путем указания MAC адреса
 
-        device = btAdapter.getRemoteDevice(btAdress);
+        try {
+            device = btAdapter.getRemoteDevice(btAdress);
+        }catch (Exception e) {
+            ToastClass toast = new ToastClass(mContext, "Не удалось получить устройство по MAC адресу");
+            toast.toast();
+            return;
+        }
 
-        if (device == null)
-        {
+        if (device == null) {
             ToastClass toast = new ToastClass(mContext, "Не удалось получить устройство по MAC адресу");
             toast.toast();
             return;
@@ -93,18 +111,19 @@ public class BluetoothBarcodeScannerHandlerClass {
 
         try {
             btSocket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
+            //btSocket = device.createInsecureRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
         } catch (IOException e) {
             ToastClass toast = new ToastClass(mContext, "Ошибка создания подключения");
             toast.toast();
         }
 
-        if (btSocket == null)
-        {
+        if (btSocket == null) {
             ToastClass toast = new ToastClass(mContext, "Ошибка создания подключения");
             toast.toast();
 
             return;
         }
+
 
         // Discovery is resource intensive.  Make sure it isn't going on
         // when you attempt to connect and pass your message.
@@ -136,6 +155,7 @@ public class BluetoothBarcodeScannerHandlerClass {
 
         inputThread = new InputThread();
         inputThread.start();
+
     }
 
     public void StopBluetoothBarcodeScannerHandler()
@@ -150,9 +170,16 @@ public class BluetoothBarcodeScannerHandlerClass {
 
     public void cancel() {
 
+        if (!Utils.checkBluetoothPermissions(mContext)) {
+            return;
+        }
+
         if (inputThread != null)
         {
-            inputThread.interrupt();
+            try {
+                inputThread.interrupt();
+            } catch (SecurityException e) {
+            }
             inputThread = null;
         }
 

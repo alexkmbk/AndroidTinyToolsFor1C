@@ -19,6 +19,9 @@
 
 #endif
 
+#include <array>
+#include <string>
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // class CAddInNative
@@ -73,6 +76,9 @@ public:
                 tVariant* pvarRetValue, tVariant* paParams, const long lSizeArray);
     // LocaleBase
     virtual void ADDIN_API SetLocale(const WCHAR_T* loc);
+
+    // UserLanguageBase
+    virtual void ADDIN_API SetUserInterfaceLanguageCode(const WCHAR_T* lang) override;
 
     IAddInDefBaseEx      *m_iConnect;
     IMemoryManager     *m_iMemory;

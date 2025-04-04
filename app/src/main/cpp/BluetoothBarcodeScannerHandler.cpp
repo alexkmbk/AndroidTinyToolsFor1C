@@ -5,7 +5,7 @@
 #include "BluetoothBarcodeScannerHandler.h"
 
 #include <IAndroidComponentHelper.h>
-#include "AddInDefBase.h"
+#include <AddInDefBase.h>
 #include "jnienv.h"
 
 
@@ -30,7 +30,8 @@ void BluetoothBarcodeScannerHandler::Start(IAddInDefBaseEx *cnn, IMemoryManager*
             eIAndroidComponentHelper);
     if (helper) {
         if (obj == NULL){
-        jclass ccloc = helper->FindClass((uint16_t *) u"com/alexkmbk/androidtinytools/BluetoothBarcodeScannerHandlerClass");
+        jclass ccloc = helper->FindClass(
+                reinterpret_cast<const char16_t *>((uint16_t *) u"com/alexkmbk/androidtinytools/BluetoothBarcodeScannerHandlerClass"));
         if (ccloc) {
             cc = static_cast<jclass>(jenv->NewGlobalRef(ccloc));
             jenv->DeleteLocalRef(ccloc);
@@ -38,7 +39,8 @@ void BluetoothBarcodeScannerHandler::Start(IAddInDefBaseEx *cnn, IMemoryManager*
             // call of constructor for java class
             jmethodID ctorID = jenv->GetMethodID(cc, "<init>", "(Landroid/app/Activity;Ljava/lang/String;J)V");
 
-            jstring jMACAddress = jenv->NewString(paParams[0].pwstrVal, paParams[0].wstrLen);
+            jstring jMACAddress = jenv->NewString(
+                    reinterpret_cast<const jchar *>(paParams[0].pwstrVal), paParams[0].wstrLen);
             jobject objloc = jenv->NewObject(cc, ctorID, activity, jMACAddress, (jlong)this);
             if (objloc)
             {

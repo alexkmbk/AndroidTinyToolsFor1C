@@ -4,10 +4,11 @@ import android.app.Activity;
 import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import androidx.annotation.Keep;
 
 import static android.content.Context.VIBRATOR_SERVICE;
 
-@android.support.annotation.Keep
+@Keep
 public class VibrateClass implements Runnable
 {
 

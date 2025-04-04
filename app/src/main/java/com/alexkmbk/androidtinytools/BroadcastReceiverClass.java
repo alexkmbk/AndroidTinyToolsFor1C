@@ -6,8 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.widget.Toast;
+import androidx.annotation.Keep;
 
-@android.support.annotation.Keep
+@Keep
 public class BroadcastReceiverClass implements Runnable{
     private Activity mContext; // activity of 1C:Enterprise
     private BroadcastReceiver mReceiver;

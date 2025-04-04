@@ -6,9 +6,9 @@
 #define ANDROIDTINYTOOLSFOR1C_BLUETOOTHBARCODESCANNERHANDLER_H
 
 #include <jni.h>
-#include "AddInDefBase.h"
-#include "IAndroidComponentHelper.h"
-#include "IMemoryManager.h"
+#include <AddInDefBase.h>
+#include <IAndroidComponentHelper.h>
+#include <IMemoryManager.h>
 
 class BluetoothBarcodeScannerHandler {
 private:

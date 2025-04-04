@@ -1,7 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 34
+    ndkVersion "26.2.11394342"
     /*compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -9,7 +10,7 @@ android {
     defaultConfig {
         applicationId "com.alexkmbk.androidtinytools"
         minSdkVersion 19
-        targetSdkVersion 28
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -20,6 +21,7 @@ android {
             }
         }
         ndk {
+            //abiFilters 'armeabi-v7a'
             //abiFilters 'armeabi-v7a', 'arm64-v8a'
             abiFilters 'armeabi-v7a', 'x86', 'arm64-v8a'
             //abiFilters 'arm64-v8a'
@@ -37,11 +39,11 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            applicationVariants.all { variant ->
-                variant.outputs.all { output ->
-                    output.outputFileName =  new File("./../../../../../Package/", 'AndroidTinyTools.apk')
-                }
-            }
+            /*applicationVariants.all { variant ->
+                //variant.outputs.all { output ->
+                //    output.outputFileName =  new File("./../../../../../Package/", 'AndroidTinyTools.apk')
+                //}
+            }*/
         }
     }
     externalNativeBuild {
@@ -51,9 +53,9 @@ android {
     }
 
     packagingOptions {
-        exclude 'lib/armeabi-v7a/libAndroidTinyTools_ARM.so'
+        //exclude 'lib/armeabi-v7a/libAndroidTinyTools_ARM.so'
         //exclude 'lib/arm64-v8a/libAndroidTinyTools_ARM64.so'
-        exclude 'lib/x86/libAndroidTinyTools_i386.so'
+        //exclude 'lib/x86/libAndroidTinyTools_i386.so'
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
@@ -67,11 +69,23 @@ android {
 }
 
 dependencies {
+    implementation 'androidx.core:core-ktx:1.6.0'
+    //debugImplementation 'com.android.support:support-annotations:28.0.0'
+
     //implementation 'com.android.support:appcompat-v7:28.0.0'
     //testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    //androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    //androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
-    implementation "com.android.support:support-annotations:28.0.0"
-    annotationProcessor 'com.android.support:support-annotations:28.0.0'
+    //implementation "com.android.support:support-annotations:28.0.0"
+    //annotationProcessor 'com.android.support:support-annotations:28.0.0'
+
+    // Для инструментальных тестов (AndroidTest)
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+
+    // Дополнительно рекомендуется добавить runner и rules
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test:rules:1.6.1")
+
+    implementation 'androidx.annotation:annotation:1.7.1'
 }

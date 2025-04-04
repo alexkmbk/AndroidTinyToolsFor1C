@@ -1,10 +1,9 @@
 //
 // Created by Alexey on 15.04.2020.
 //
-
+#include <AddInDefBase.h>
 #include <IAndroidComponentHelper.h>
 #include "BroadcastReceiver.h"
-#include "AddInDefBase.h"
 #include "jnienv.h"
 
 
@@ -30,7 +29,7 @@ void BroadcastReceiver::Start(IAddInDefBaseEx *cnn, IMemoryManager* iMemory, tVa
    IAndroidComponentHelper *helper = (IAndroidComponentHelper *) cnn->GetInterface(
            eIAndroidComponentHelper);
    if (helper) {
-      jclass ccloc = helper->FindClass((uint16_t *) u"com/alexkmbk/androidtinytools/BroadcastReceiverClass");
+      jclass ccloc = helper->FindClass((const WCHAR_T *) u"com/alexkmbk/androidtinytools/BroadcastReceiverClass");
       if (ccloc) {
          JNIEnv *jenv = getJniEnv();
          cc = static_cast<jclass>(jenv->NewGlobalRef(ccloc));
@@ -39,8 +38,10 @@ void BroadcastReceiver::Start(IAddInDefBaseEx *cnn, IMemoryManager* iMemory, tVa
          // call of constructor for java class
          jmethodID ctorID = jenv->GetMethodID(cc, "<init>", "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;J)V");
 
-         jstring jActionName = jenv->NewString(paParams[0].pwstrVal, paParams[0].wstrLen);
-         jstring jStringParam = jenv->NewString(paParams[1].pwstrVal, paParams[1].wstrLen);
+         jstring jActionName = jenv->NewString(
+                 reinterpret_cast<const jchar *>((WCHAR_T *) paParams[0].pwstrVal), paParams[0].wstrLen);
+         jstring jStringParam = jenv->NewString(
+                 reinterpret_cast<const jchar *>(paParams[1].pwstrVal), paParams[1].wstrLen);
          jobject objloc = jenv->NewObject(cc, ctorID, activity, jActionName, jStringParam, (jlong)this);
          if (objloc)
          {

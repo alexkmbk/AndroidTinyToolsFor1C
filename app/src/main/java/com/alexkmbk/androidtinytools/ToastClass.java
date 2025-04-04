@@ -2,8 +2,9 @@ package com.alexkmbk.androidtinytools;
 
 import android.app.Activity;
 import android.widget.Toast;
+import androidx.annotation.Keep;
 
-@android.support.annotation.Keep
+@Keep
 public class ToastClass implements Runnable
 {
 

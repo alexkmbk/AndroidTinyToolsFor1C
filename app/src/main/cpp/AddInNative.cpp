@@ -3,25 +3,12 @@
 #include <exception>
 #include "AddInNative.h"
 #include "StrConv.h"
-#include <map>
-#include <vector>
 
+static const std::u16string sClassName(u"AndroidTinyTools");
 
-static AppCapabilities g_capabilities = eAppCapabilitiesInvalid;
+static const std::array<std::u16string, CAddInNative::eMethLast> osMethods{ u"vibrate", u"beep", u"toast", u"startbroadcastreceiver", u"getbluetoothdeviceslist", u"startbluetoothscannerhandler", u"stopbluetoothscannerhandler", u"isbluetoothscannerhandlerconnected"};
 
-static std::map<std::u16string, long> mMethods;
-static std::vector<std::u16string> vMethods;
-
-inline void fillMap(std::map<std::u16string, long>& map, const std::vector<std::u16string> & vector) {
-    long index = 0;
-    for (auto &item : vector)
-    {
-        auto lowCasedItem = item;
-        tolowerStr(lowCasedItem);
-        map.insert({ lowCasedItem, index });
-        index++;
-    }
-}
+AppCapabilities g_capabilities = eAppCapabilitiesInvalid;
 
 //---------------------------------------------------------------------------//
 long GetClassObject(const WCHAR_T* wsName, IComponentBase** pInterface)
@@ -52,22 +39,16 @@ long DestroyObject(IComponentBase** pIntf)
 //---------------------------------------------------------------------------//
 const WCHAR_T* GetClassNames()
 {
-    static char16_t cls_names[] = u"AndroidTinyTools";
-    return reinterpret_cast<WCHAR_T *>(cls_names);
-}
+    return (WCHAR_T*)sClassName.c_str();
+ }
 //---------------------------------------------------------------------------//
 
 // CAddInNative
 //---------------------------------------------------------------------------//
 CAddInNative::CAddInNative()
 {
-    m_iMemory = NULL;
-    m_iConnect = NULL;
-
-    if (mMethods.size() == 0) {
-        vMethods = { u"Vibrate", u"Beep", u"Toast", u"StartBroadcastReceiver", u"GetBluetoothDevicesList", u"StartBluetoothScannerHandler", u"StopBluetoothScannerHandler", u"IsBluetoothScannerHandlerConnected"};
-        fillMap(mMethods, vMethods);
-    }
+    m_iMemory = 0;
+    m_iConnect = 0;
 }
 //---------------------------------------------------------------------------//
 CAddInNative::~CAddInNative()
@@ -96,13 +77,16 @@ void CAddInNative::Done()
 //---------------------------------------------------------------------------//
 bool CAddInNative::RegisterExtensionAs(WCHAR_T** wsExtensionName)
 {
-    char16_t name[] = u"AndroidTinyTools";
+    if (wsExtensionName == nullptr) {
+        return false;
+    }
+    const size_t size = (sClassName.size() + 1) * sizeof(char16_t);
 
-    if (!m_iMemory || !m_iMemory->AllocMemory(reinterpret_cast<void **>(wsExtensionName), sizeof(name))) {
+    if (!m_iMemory || !m_iMemory->AllocMemory(reinterpret_cast<void**>(wsExtensionName), size) || *wsExtensionName == nullptr) {
         return false;
     };
 
-    memcpy(*wsExtensionName, name, sizeof(name));
+    memcpy(*wsExtensionName, sClassName.c_str(), size);
 
     return true;
 }
@@ -158,104 +142,43 @@ long CAddInNative::GetNMethods()
 //---------------------------------------------------------------------------//
 long CAddInNative::FindMethod(const WCHAR_T* wsMethodName)
 {
-    std::basic_string<char16_t> usMethodName = (char16_t*)(wsMethodName);
+    std::u16string usMethodName = (char16_t*)(wsMethodName);
     tolowerStr(usMethodName);
 
-    auto it = mMethods.find(usMethodName);
-    if (it != mMethods.end())
-        return it->second;
+    auto it = std::find(osMethods.begin(), osMethods.end(), usMethodName);
+    if (it != osMethods.end()) {
+        return it - osMethods.begin();
+    }
 
     return -1;
 }
-
-/*long CAddInNative::FindMethod(const WCHAR_T* wsMethodName)
-{
-
-    long plMethodNum = -1;
-
-    if (memcmp(wsMethodName, u"Vibrate", (sizeof(u"Vibrate")) - sizeof(char16_t)) == 0){
-        plMethodNum = eMethVibrate;
-    }
-    else if (memcmp(wsMethodName, u"Beep", (sizeof(u"Beep")) - sizeof(char16_t)) == 0){
-        plMethodNum = eMethBeep;
-    }
-    else if (memcmp(wsMethodName, u"Toast", (sizeof(u"Toast")) - sizeof(char16_t)) == 0) {
-        plMethodNum = eMethToast;
-    }
-    else if (memcmp(wsMethodName, u"StartBroadcastReceiver", (sizeof(u"StartBroadcastReceiver")) - sizeof(char16_t)) == 0) {
-        plMethodNum = eMethStartBroadcastReceiver;
-    }
-    else if (memcmp(wsMethodName, u"GetBluetoothDevicesList", (sizeof(u"GetBluetoothDevicesList")) - sizeof(char16_t)) == 0) {
-        plMethodNum = eMethGetBluetoothDevicesList;
-    }
-    else if (memcmp(wsMethodName, u"StartBluetoothScannerListener", (sizeof(u"StartBluetoothScannerListener")) - sizeof(char16_t)) == 0) {
-        plMethodNum = eMethStartBluetoothScannerListener;
-    }
-    return plMethodNum;
-}*/
-
 //---------------------------------------------------------------------------//
 const WCHAR_T* CAddInNative::GetMethodName(const long lMethodNum, const long lMethodAlias)
 {
 
     if (lMethodNum >= eMethLast)
-        return NULL;
+        return nullptr;
 
-    const char16_t* usCurrentName = NULL;
-    size_t len = 0;
+    const std::basic_string<char16_t>* usCurrentName;
 
-    switch (lMethodAlias) {
-        case 0: // First language
-        {
-            switch (lMethodNum) {
-                case eMethVibrate: {
-                    usCurrentName = u"Vibrate";
-                    break;
-                }
-                case eMethBeep: {
-                    usCurrentName = u"Beep";
-                    break;
-                }
-                case eMethToast: {
-                    usCurrentName = u"Toast";
-                    break;
-                }
-                case eMethStartBroadcastReceiver: {
-                    usCurrentName = u"StartBroadcastReceiver";
-                    break;
-                }
-                case eMethGetBluetoothDevicesList: {
-                    usCurrentName = u"GetBluetoothDevicesList";
-                    break;
-                }
-                case eMethStartBluetoothScannerHandler: {
-                    usCurrentName = u"StartBluetoothScannerHandler";
-                    break;
-                }
-                case eMethStopBluetoothScannerHandler: {
-                    usCurrentName = u"StopBluetoothScannerHandler";
-                    break;
-                }
-                case eMethIsBluetoothScannerHandlerConnected: {
-                    usCurrentName = u"IsBluetoothScannerConnected";
-                    break;
-                }
-            }
-        }
-    }
+    usCurrentName = &osMethods[lMethodNum];
 
-    len = sizeof(usCurrentName);
+    if (usCurrentName == nullptr)
+        return nullptr;
 
-    WCHAR_T *result = nullptr;
+    WCHAR_T* result = nullptr;
 
-    if ((usCurrentName == NULL) || !m_iMemory || !m_iMemory->AllocMemory(reinterpret_cast<void **>(&result), len)) {
+    const size_t bytes = (usCurrentName->length() + 1) * sizeof(char16_t);
+
+    if (!m_iMemory || !m_iMemory->AllocMemory(reinterpret_cast<void**>(&result), bytes)) {
         return nullptr;
     };
 
-    memcpy(result, usCurrentName, len);
+    memcpy(result, usCurrentName->c_str(), bytes);
 
     return result;
 }
+
 //---------------------------------------------------------------------------//
 long CAddInNative::GetNParams(const long lMethodNum)
 {
@@ -389,20 +312,6 @@ bool CAddInNative::CallAsFunc(const long lMethodNum,
     return true;
 }
 
-int strlen16(char16_t* strarg)
-{
-    int count = 0;
-    if(!strarg)
-        return -1; //strarg is NULL pointer
-    char16_t* str = strarg;
-    while(*str)
-    {
-        count++;
-        str++;
-    }
-    return count;
-}
-
 
 void CAddInNative::SetLocale(const WCHAR_T* loc)
 {
@@ -433,7 +342,7 @@ void CAddInNative::Vibrate(tVariant* paParams, const long lSizeArray) {
     {
 
         long milliseconds = paParams[0].lVal;
-        jclass ccloc = helper->FindClass((uint16_t*)u"com/alexkmbk/androidtinytools/VibrateClass");
+        jclass ccloc = helper->FindClass((const WCHAR_T*)u"com/alexkmbk/androidtinytools/VibrateClass");
 
         if (ccloc)
         {
@@ -479,7 +388,7 @@ void CAddInNative::Beep(tVariant* paParams, const long lSizeArray) {
 
     if (helper)
     {
-        jclass ccloc = helper->FindClass((uint16_t*)u"com/alexkmbk/androidtinytools/BeepClass");
+        jclass ccloc = helper->FindClass((const WCHAR_T*)u"com/alexkmbk/androidtinytools/BeepClass");
 
         if (ccloc)
         {
@@ -521,7 +430,7 @@ void CAddInNative::Toast(tVariant* paParams, const long lSizeArray) {
     if (helper)
     {
 
-        jclass ccloc = helper->FindClass((uint16_t*)u"com/alexkmbk/androidtinytools/ToastClass");
+        jclass ccloc = helper->FindClass((const WCHAR_T*)u"com/alexkmbk/androidtinytools/ToastClass");
 
         if (ccloc)
         {
@@ -532,7 +441,8 @@ void CAddInNative::Toast(tVariant* paParams, const long lSizeArray) {
             jobject activity = helper->GetActivity();
             jmethodID ctorID = jenv->GetMethodID(cc, "<init>", "(Landroid/app/Activity;Ljava/lang/String;)V");
 
-            jstring jStringParam = jenv->NewString(paParams[0].pwstrVal, paParams[0].wstrLen);
+            jstring jStringParam = jenv->NewString(
+                    reinterpret_cast<const jchar *>(paParams[0].pwstrVal), paParams[0].wstrLen);
             jobject objloc = jenv->NewObject(cc, ctorID, activity, jStringParam);
             if (objloc)
             {
@@ -573,7 +483,7 @@ void CAddInNative::GetBluetoothDevicesList(tVariant* pvarRetValue, tVariant* paP
     if (helper)
     {
 
-        jclass ccloc = helper->FindClass((uint16_t*)u"com/alexkmbk/androidtinytools/BluetoothClass");
+        jclass ccloc = helper->FindClass((const WCHAR_T*)u"com/alexkmbk/androidtinytools/BluetoothClass");
 
         if (ccloc)
         {
@@ -638,7 +548,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_alexkmbk_androidtinytools_BroadcastRe
         jstring2v8string(jenv, broadcastReceiver->m_iMemory, jsExtraParam, &wcExtraParam);
 
         if (broadcastReceiver->m_iConnect != NULL) {
-            broadcastReceiver->m_iConnect->ExternalEvent((uint16_t *) g_EventSource,
+            broadcastReceiver->m_iConnect->ExternalEvent((WCHAR_T*) g_EventSource,
                                                            wcEventName,
                                                            wcExtraParam);
         }
@@ -656,9 +566,13 @@ extern "C" JNIEXPORT void JNICALL Java_com_alexkmbk_androidtinytools_BluetoothBa
         jstring2v8string(jenv, bluetoothBarcodeScannerHandler->m_iMemory, sBarcode, &wcBarcode);
 
         if (bluetoothBarcodeScannerHandler->m_iConnect != NULL) {
-            bluetoothBarcodeScannerHandler->m_iConnect->ExternalEvent((uint16_t *) g_EventSource,
-                                                                      (uint16_t *) g_OnBarcodeEventName,
+            bluetoothBarcodeScannerHandler->m_iConnect->ExternalEvent((WCHAR_T*) g_EventSource,
+                                                                      (WCHAR_T*) g_OnBarcodeEventName,
                                                                       wcBarcode);
         }
     }
+}
+
+void ADDIN_API CAddInNative::SetUserInterfaceLanguageCode(const WCHAR_T* lang)
+{
 }

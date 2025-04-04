@@ -3,8 +3,9 @@ package com.alexkmbk.androidtinytools;
 import android.app.Activity;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import androidx.annotation.Keep;
 
-@android.support.annotation.Keep
+@Keep
 public class BeepClass implements Runnable
 {
 

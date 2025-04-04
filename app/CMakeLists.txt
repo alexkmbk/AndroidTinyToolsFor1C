@@ -5,7 +5,8 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
-include_directories(${PROJECT_SOURCE_DIR}../../../include)
+# include_directories(${PROJECT_SOURCE_DIR}../../../include)
+include_directories(src/main/cpp/include)
 
 add_compile_options(-O2)
 

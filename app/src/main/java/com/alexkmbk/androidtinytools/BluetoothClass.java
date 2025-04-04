@@ -1,7 +1,11 @@
 package com.alexkmbk.androidtinytools;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+
 import java.util.Set;
 
 public class BluetoothClass {
@@ -15,12 +19,19 @@ public class BluetoothClass {
         this.mContext = mContext;
     }
 
-    public String getBluetoothDevicesList()
-    {
+    @SuppressLint("MissingPermission")
+    public String getBluetoothDevicesList() {
+
+        if (!Utils.checkBluetoothPermissions(mContext)) {
+            return "";
+        }
         // Get the local Bluetooth adapter
-        btAdapter = BluetoothAdapter.getDefaultAdapter();
-        if(btAdapter==null)
-        {
+        //btAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        BluetoothManager bluetoothManager = (BluetoothManager) mContext.getSystemService(mContext.BLUETOOTH_SERVICE);
+        btAdapter = bluetoothManager.getAdapter();
+
+        if (btAdapter == null) {
             // отсутствует поддержка работы с блютуз
             ToastClass toast = new ToastClass(mContext, "Отсутствует поддержка работы с bluetooth");
             toast.toast();
@@ -33,7 +44,6 @@ public class BluetoothClass {
             return "";
         }
 
-        // Get a set of currently paired devices
         pairedDevices = btAdapter.getBondedDevices();
 
         // If there are paired devices, add each one to the ArrayAdapter
