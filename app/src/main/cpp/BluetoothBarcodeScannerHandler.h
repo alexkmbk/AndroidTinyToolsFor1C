@@ -14,7 +14,7 @@ class BluetoothBarcodeScannerHandler {
 private:
 
     jclass cc;
-    jobject obj;
+    jobject obj = NULL;
 
 public:
     BluetoothBarcodeScannerHandler(){obj = NULL; cc = NULL;};

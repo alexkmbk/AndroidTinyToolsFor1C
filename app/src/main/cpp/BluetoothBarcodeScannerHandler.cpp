@@ -63,7 +63,7 @@ void BluetoothBarcodeScannerHandler::Stop() {
         jmethodID methID = env->GetMethodID(cc, "StopBluetoothBarcodeScannerHandler", "()V");
         env->CallVoidMethod(obj, methID);
         if (obj != NULL){
-            env->DeleteLocalRef(obj);
+            env->DeleteGlobalRef(obj);
             obj = NULL;
         }
     }

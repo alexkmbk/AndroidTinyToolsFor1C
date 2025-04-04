@@ -10,3 +10,8 @@
 /captures
 .externalNativeBuild
 /Package
+/app
+/libs
+/.idea
+/gradle
+*.log
