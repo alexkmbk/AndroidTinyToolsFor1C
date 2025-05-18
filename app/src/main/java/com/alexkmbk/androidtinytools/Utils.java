@@ -4,8 +4,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+//import androidx.core.app.ActivityCompat;
+//import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 
@@ -15,15 +15,14 @@ public class Utils {
 
         // Сначала собираем все невыданные разрешения
         for (String permission : Constants.getBluetoothPermissions()) {
-            if (ContextCompat.checkSelfPermission(mContext, permission) != PackageManager.PERMISSION_GRANTED) {
+            if (mContext.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 notGrantedPermissions.add(permission);
             }
         }
 
         // Запрашиваем, если есть хотя бы одно невыданное
         if (!notGrantedPermissions.isEmpty()) {
-            ActivityCompat.requestPermissions(
-                    mContext,
+            mContext.requestPermissions(
                     notGrantedPermissions.toArray(new String[0]),
                     Constants.REQUEST_BLUETOOTH_CONNECT_PERMISSION
             );
