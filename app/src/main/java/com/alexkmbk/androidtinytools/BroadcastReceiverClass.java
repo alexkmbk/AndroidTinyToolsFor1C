@@ -65,9 +65,9 @@ public class BroadcastReceiverClass implements Runnable{
                 };
                 IntentFilter filter = new IntentFilter(mActionName);
 
-                // Android 14+
+                // Android 13+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    mContext.registerReceiver(mReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+                    mContext.registerReceiver(mReceiver, filter, Context.RECEIVER_EXPORTED);
                 } else {
                     mContext.registerReceiver(mReceiver, filter);
                 }
