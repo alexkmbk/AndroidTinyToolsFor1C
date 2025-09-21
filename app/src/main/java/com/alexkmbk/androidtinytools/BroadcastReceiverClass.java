@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.widget.Toast;
 import androidx.annotation.Keep;
+import android.os.Build;
 
 @Keep
 public class BroadcastReceiverClass implements Runnable{
@@ -62,7 +63,14 @@ public class BroadcastReceiverClass implements Runnable{
                         }
                     }
                 };
-                mContext.registerReceiver(mReceiver, new IntentFilter(mActionName));
+                IntentFilter filter = new IntentFilter(mActionName);
+
+                // Android 14+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    mContext.registerReceiver(mReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+                } else {
+                    mContext.registerReceiver(mReceiver, filter);
+                }
             }
         }
  }
