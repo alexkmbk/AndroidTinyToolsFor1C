@@ -20,9 +20,10 @@ public class VibrateClass implements Runnable
         this.milliseconds = milliseconds;
     }
 
+    @SuppressWarnings("deprecation")
     public void run() {
 
-        Vibrator vibrator = (Vibrator) mContext.getSystemService(VIBRATOR_SERVICE);
+        Vibrator vibrator = mContext.getSystemService(Vibrator.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createOneShot(milliseconds, VibrationEffect.DEFAULT_AMPLITUDE));
         } else {

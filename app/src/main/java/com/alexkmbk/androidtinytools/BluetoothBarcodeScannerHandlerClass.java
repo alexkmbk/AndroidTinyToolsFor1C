@@ -6,7 +6,9 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.pm.PackageManager;
 
 import java.io.IOException;
@@ -58,7 +60,11 @@ public class BluetoothBarcodeScannerHandlerClass {
         // получаем объект устройства
         if (btAdapter == null)
             try {
-                btAdapter = BluetoothAdapter.getDefaultAdapter();
+                //btAdapter = BluetoothAdapter.getDefaultAdapter();
+                BluetoothManager bluetoothManager =
+                        (BluetoothManager) mContext.getSystemService(Context.BLUETOOTH_SERVICE);
+                btAdapter = bluetoothManager.getAdapter();
+
             } catch (Exception e) {
                 ToastClass toast = new ToastClass(mContext, "Не удалось получить доступ к bluetooth адаптеру.");
                 toast.toast();

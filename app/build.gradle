@@ -4,10 +4,16 @@ android {
     namespace 'com.alexkmbk.androidtinytools'
     compileSdkVersion 34
     ndkVersion "26.2.11394342"
-    /*compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }*/
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    // включаем Xlint
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs += ["-Xlint:deprecation"]
+    }
+
     defaultConfig {
         applicationId "com.alexkmbk.androidtinytools"
         minSdkVersion 23
@@ -24,7 +30,7 @@ android {
         ndk {
             //abiFilters 'armeabi-v7a'
             //abiFilters 'armeabi-v7a', 'arm64-v8a'
-            abiFilters 'armeabi-v7a', 'x86', 'arm64-v8a'
+            abiFilters 'armeabi-v7a', 'x86', 'arm64-v8a', 'x86_64'
             //abiFilters 'arm64-v8a'
             //abiFilters 'armeabi'
             //abiFilters 'x86_64'
@@ -41,6 +47,11 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            externalNativeBuild {
+                cmake {
+                    arguments "-DCMAKE_BUILD_TYPE=Release"
+                }
+            }
             /*applicationVariants.all { variant ->
                 //variant.outputs.all { output ->
                 //    output.outputFileName =  new File("./../../../../../Package/", 'AndroidTinyTools.apk')
@@ -58,6 +69,7 @@ android {
         //exclude 'lib/armeabi-v7a/libAndroidTinyTools_ARM.so'
         //exclude 'lib/arm64-v8a/libAndroidTinyTools_ARM64.so'
         //exclude 'lib/x86/libAndroidTinyTools_i386.so'
+        exclude "lib/**"
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
@@ -67,6 +79,73 @@ android {
         exclude 'META-INF/notice.txt'
         exclude 'META-INF/ASL2.0'
         exclude("META-INF/*.kotlin_module")
+    }
+}
+
+tasks.register("incrementVersion") {
+    doLast {
+        def constantsFile = file("src/main/java/com/alexkmbk/androidtinytools/Constants.java")
+        def content = constantsFile.text
+        def versionRegex = /public static final String version = "(\d+)_(\d+)_(\d+)";/
+        def matcher = content =~ versionRegex
+
+        if (matcher.find()) {
+            def major = matcher[0][1].toInteger()
+            def minor = matcher[0][2].toInteger()
+            def patch = matcher[0][3].toInteger() + 1
+
+            def newVersion = "public static final String version = \"${major}_${minor}_${patch}\";"
+            content = content.replaceFirst(versionRegex, newVersion)
+            constantsFile.text = content
+            println("Version updated to: ${major}_${minor}_${patch}")
+
+            // Обновление файла VerInfo.txt
+            def verInfoFile = file("${rootDir}/Package/VerInfo.txt")
+            verInfoFile.text = "${major}.${minor}.${patch}"
+            println("VerInfo.txt updated to: ${major}.${minor}.${patch}")
+        } else {
+            throw new GradleException("Version constant not found in Constants.java")
+        }
+    }
+}
+
+preBuild.dependsOn("incrementVersion")
+
+// Запускаем bat после сборки APK
+gradle.projectsEvaluated {
+    tasks.named("assembleRelease") {
+        doLast {
+            println ">>> Копируем APK и запускаем MakePackage.bat..."
+            println ">>> rootDir:${rootDir}"
+
+            // Путь к готовому APK (Android Gradle Plugin 7.x+ кладёт сюда)
+            //def apkPath = "${rootDir}/app/release/app-release.apk"
+
+            def variant = name.replace("assemble", "").toLowerCase()
+            println ">>> Копируем APK для variant: ${variant}"
+
+            // Путь к apk
+            def apkPath = "${rootDir}/app/${variant}/app-${variant}.apk"
+
+            // Папка назначения Package (корень проекта)
+            def packageDir = "${rootDir}/Package"
+
+            // Создаём папку Package, если её ещё нет
+            file(packageDir).mkdirs()
+
+            // Копируем APK
+            copy {
+                from apkPath
+                into packageDir
+                rename { fileName ->
+                    "AndroidTinyTools.apk"   // любое имя вместо app-release.apk
+                }
+            }
+            exec {
+                workingDir "${project.rootDir}/Package"
+                commandLine "cmd", "/c", "MakePackage.bat"
+            }
+        }
     }
 }
 

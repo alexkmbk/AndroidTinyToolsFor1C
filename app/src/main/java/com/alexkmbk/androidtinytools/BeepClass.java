@@ -18,8 +18,8 @@ public class BeepClass implements Runnable
     }
 
      public void run() {
-        final ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 200);
-        tg.startTone(TONE);
+        final ToneGenerator  tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+        tg.startTone(TONE, 200);
         tg.release();
     }
 

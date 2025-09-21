@@ -5,6 +5,8 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
+project(AndroidTinyTools LANGUAGES C CXX)
+
 # include_directories(${PROJECT_SOURCE_DIR}../../../include)
 include_directories(src/main/cpp/include)
 
@@ -32,6 +34,8 @@ if(${ANDROID_ABI} STREQUAL "armeabi-v7a")
     set_target_properties(AndroidTinyTools PROPERTIES SUFFIX "_ARM.so")
 elseif(${ANDROID_ABI} STREQUAL "arm64-v8a")
     set_target_properties(AndroidTinyTools PROPERTIES SUFFIX "_ARM64.so")
+elseif(${ANDROID_ABI} STREQUAL "x86_64")
+    set_target_properties(AndroidTinyTools PROPERTIES SUFFIX "_x86_64.so")
 else()
     set_target_properties(AndroidTinyTools PROPERTIES SUFFIX "_i386.so")
 endif()
@@ -50,6 +54,16 @@ find_library( # Sets the name of the path variable.
               # Specifies the name of the NDK library that
               # you want CMake to locate.
              log )
+
+set(PACKAGE_DIR ${PROJECT_ROOT}/Package)
+
+# Копировать собранную so в указанную папку
+add_custom_command(TARGET AndroidTinyTools
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        $<TARGET_FILE:AndroidTinyTools>
+        ${PACKAGE_DIR}
+)
 
 # Specifies libraries CMake should link to your target library. You
 # can link multiple libraries, such as libraries you define in this
